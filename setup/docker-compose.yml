@@ -1,0 +1,101 @@
+version: '3.1'
+
+services:
+  ai_up_odoo:
+    build:
+      context: ../
+      dockerfile: setup/Dockerfile
+    # command: odoo -u all
+    container_name: ai_up_odoo
+    restart: unless-stopped
+    depends_on:
+      - ai_up_odoo_db
+    ports:
+      - "8069:8069"
+    volumes:
+      - ./_data/odoo-ai-bot-up-web:/var/lib/odoo
+      - ./_data/odoo-ai-bot-up-ai-models:/var/lib/ai-models
+      - ./config:/etc/odoo
+      - ../odoo/custom-addons:/mnt/custom-addons
+      - ../odoo/third-party-addons:/mnt/third-party-addons
+    environment:
+      VIRTUAL_HOST: aiup.ralejandro.com
+      VIRTUAL_PORT: 8069
+      LETSENCRYPT_HOST: aiup.ralejandro.com
+      LETSENCRYPT_EMAIL: ralejandrobm@gmail.com
+    env_file:
+      - .env
+    networks:
+      - database
+      - web
+    shm_size: '1gb'
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+        reservations:
+          memory: 4g
+    mem_limit: 8g
+    memswap_limit: 8g
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "50m"
+          max-file: "2"
+
+  ai_up_odoo_db:
+    image: pgvector/pgvector:pg17
+    container_name: ai_up_odoo_db
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./_data/odoo-ai-bot-up-db:/var/lib/postgresql/data
+    networks:
+      - database
+      - web
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "50m"
+          max-file: "2"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ai_up_odoo_pgadmin
+    restart: unless-stopped
+    depends_on:
+      - ai_up_odoo_db
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./_data/odoo-ai-bot-up-pgadmin:/var/lib/pgadmin
+    environment:
+      VIRTUAL_HOST: db.aiup.ralejandro.com
+      VIRTUAL_PORT: 80
+      LETSENCRYPT_HOST: db.aiup.ralejandro.com
+      LETSENCRYPT_EMAIL: ralejandrobm@gmail.com
+      PGADMIN_LISTEN_PORT: 80
+    env_file:
+      - .env
+    ports:
+      - "5050:80"
+    networks:
+      - database
+      - web
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "50m"
+          max-file: "2"
+
+volumes:
+  odoo-ai-bot-up-web:
+  odoo-ai-bot-up-db:
+  odoo-ai-bot-up-pgadmin:
+
+
+networks:
+  database:
+    driver: bridge
+  web:
+    external: true

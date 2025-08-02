@@ -1,0 +1,10 @@
+<odoo>
+    <data noupdate="1">
+        <record id="pg_vector_advertisement_vectorizer" model="ai_up.vectorizer.provider">
+            <field name="name">Advertisement pgvector</field>
+            <field name="slug">advertisement-pg-vector</field>
+            <field name="code">pg_vector</field>
+            <field name="pg_vector_same_db">1</field>
+        </record>
+    </data>
+</odoo>

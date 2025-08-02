@@ -1,0 +1,7 @@
+pre-commit
+black
+flake8
+pydantic==2.7.0
+langchain-huggingface==0.1.2
+langchain-postgres==0.0.13
+langchain-openai==0.3.7

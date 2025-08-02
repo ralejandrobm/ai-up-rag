@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Advertisement Views -->
+    <record id="view_advertisement_list" model="ir.ui.view">
+        <field name="name">ai_up.advertisement.list</field>
+        <field name="model">ai_up.advertisement</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence_number"/>
+                <field name="title"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <!-- Form view for the advertisement model -->
+    <record id="view_advertisement_form" model="ir.ui.view">
+        <field name="name">ai_up.advertisement.form</field>
+        <field name="model">ai_up.advertisement</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="sequence_number" widget="mail_activity"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="title"/>
+                    </group>
+                    <group>
+                        <field name="interested_parties_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                        <field name="description"/>
+                        <field name="active" widget="boolean_toggle"/>
+                    </group>
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+    <!-- Actions -->
+    <record id="action_advertisement" model="ir.actions.act_window">
+        <field name="name">Advertisement</field>
+        <field name="path">advertisements</field>
+        <field name="res_model">ai_up.advertisement</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <!-- Menu Structure -->
+    <menuitem id="menu_ai_up_main" name="AI UP Advertisement"/>
+    <menuitem id="menu_advertisements" name="Advertisements" parent="menu_ai_up_main" action="action_advertisement"/>
+    <menuitem id="menu_configuration" name="Configuration" parent="menu_ai_up_main" />
+	<menuitem id="menu_interested_parties" name="Interested Parties" parent="menu_configuration" action="action_interested_party" />
+</odoo>

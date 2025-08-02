@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_ai_up_vectorizer_provider_pg_vector_form" model="ir.ui.view">
+        <field name="name">ai.up.vectorizer.provider.pg_vector.form</field>
+        <field name="model">ai_up.vectorizer.provider</field>
+        <field name="inherit_id" ref="ai_up_vectorizer.view_ai_up_vectorizer_provider_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="PG Vector Configuration" invisible="code != 'pg_vector'">
+                    <group>
+                        <field name="pg_vector_same_db"/>
+                        <field name="pg_vector_host" invisible="pg_vector_same_db"/>
+                        <field name="pg_vector_port" invisible="pg_vector_same_db"/>
+                        <field name="pg_vector_user" invisible="pg_vector_same_db"/>
+                        <field name="pg_vector_password" widget="password" invisible="pg_vector_same_db"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
