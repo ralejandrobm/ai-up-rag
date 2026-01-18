@@ -1,0 +1,79 @@
+services:
+  ai_up_odoo:
+    build:
+      context: ../
+      dockerfile: setup/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - ai_up_odoo_db
+    volumes:
+      - odoo-ai-bot-up-web:/var/lib/odoo
+      - odoo-ai-bot-up-ai-models:/var/lib/ai-models
+      - ./config:/etc/odoo
+      - ../odoo/custom-addons:/mnt/custom-addons
+      - ../odoo/third-party-addons:/mnt/third-party-addons
+    env_file:
+      - .env
+    networks:
+      - database
+    shm_size: '1gb'
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+        reservations:
+          memory: 4g
+    mem_limit: 8g
+    memswap_limit: 8g
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "50m"
+          max-file: "2"
+
+  ai_up_odoo_db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - odoo-ai-bot-up-db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - database
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "50m"
+          max-file: "2"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    depends_on:
+      - ai_up_odoo_db
+    volumes:
+      - odoo-ai-bot-up-pgadmin:/var/lib/pgadmin
+    env_file:
+      - .env
+    networks:
+      - database
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "50m"
+          max-file: "2"
+
+volumes:
+  odoo-ai-bot-up-web:
+  odoo-ai-bot-up-db:
+  odoo-ai-bot-up-pgadmin:
+  odoo-ai-bot-up-ai-models:
+
+networks:
+  database:
+    driver: bridge
