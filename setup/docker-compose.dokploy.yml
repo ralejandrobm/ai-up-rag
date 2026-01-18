@@ -9,7 +9,7 @@ services:
     volumes:
       - odoo-ai-bot-up-web:/var/lib/odoo
       - odoo-ai-bot-up-ai-models:/var/lib/ai-models
-      - ./config:/etc/odoo
+      - ../../files/odoo.conf:/etc/odoo/odoo.conf
       - ../odoo/custom-addons:/mnt/custom-addons
       - ../odoo/third-party-addons:/mnt/third-party-addons
     env_file:
