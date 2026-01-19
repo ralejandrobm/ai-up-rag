@@ -12,7 +12,7 @@ _logger = logging.getLogger(__name__)
 
 class MessageRequestModel(BaseModel):
     # TODO: add validation for phone number
-    from_phone: str = Field(..., min_length=7, max_length=15)
+    from_phone: str = Field(..., min_length=3, max_length=25)
     # TODO: add validation to too many characters
     message: str = Field(..., min_length=1)
 
