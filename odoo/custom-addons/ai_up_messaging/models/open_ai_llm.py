@@ -23,7 +23,7 @@ class BaseResponseFormatter(BaseModel):
 llm_model = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0.5,
-    max_completion_tokens=4500,
+    max_completion_tokens=16384,
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
 
