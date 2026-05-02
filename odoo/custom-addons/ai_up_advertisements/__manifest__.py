@@ -1,5 +1,5 @@
 {
-    "name": "AI CuGDL Advertisements",
+    "name": "AI UP Advertisements",
     "version": "18.0.0.1.0",
     "summary": "Manage advertisements and interested parties",
     "description": """

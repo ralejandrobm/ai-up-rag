@@ -5,7 +5,6 @@ services:
     build:
       context: ../
       dockerfile: setup/Dockerfile
-    # command: odoo -u all
     container_name: ai_up_odoo
     restart: unless-stopped
     depends_on:
@@ -13,11 +12,17 @@ services:
     ports:
       - "8069:8069"
     volumes:
-      - ./_data/odoo-ai-bot-up-web:/var/lib/odoo
-      - ./_data/odoo-ai-bot-up-ai-models:/var/lib/ai-models
+      # ✅ datos persistentes
+      - odoo_web:/var/lib/odoo
+      - odoo_models:/var/lib/ai-models
+
+      # ✅ config (dev editable)
       - ./config:/etc/odoo
+
+      # ✅ addons (editable)
       - ../odoo/custom-addons:/mnt/custom-addons
       - ../odoo/third-party-addons:/mnt/third-party-addons
+
     environment:
       VIRTUAL_HOST: aiup.ralejandro.com
       VIRTUAL_PORT: 8069
@@ -40,8 +45,8 @@ services:
     logging:
       driver: "json-file"
       options:
-          max-size: "50m"
-          max-file: "2"
+        max-size: "50m"
+        max-file: "2"
 
   ai_up_odoo_db:
     image: pgvector/pgvector:pg17
@@ -50,15 +55,16 @@ services:
     env_file:
       - .env
     volumes:
-      - ./_data/odoo-ai-bot-up-db:/var/lib/postgresql/data
+      # ✅ DB persistente
+      - odoo_db:/var/lib/postgresql/data
     networks:
       - database
       - web
     logging:
       driver: "json-file"
       options:
-          max-size: "50m"
-          max-file: "2"
+        max-size: "50m"
+        max-file: "2"
 
   pgadmin:
     image: dpage/pgadmin4
@@ -68,7 +74,8 @@ services:
       - ai_up_odoo_db
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./_data/odoo-ai-bot-up-pgadmin:/var/lib/pgadmin
+      # ✅ volumen sin permisos manuales
+      - pgadmin_data:/var/lib/pgadmin
     environment:
       VIRTUAL_HOST: db.aiup.ralejandro.com
       VIRTUAL_PORT: 80
@@ -85,14 +92,14 @@ services:
     logging:
       driver: "json-file"
       options:
-          max-size: "50m"
-          max-file: "2"
+        max-size: "50m"
+        max-file: "2"
 
 volumes:
-  odoo-ai-bot-up-web:
-  odoo-ai-bot-up-db:
-  odoo-ai-bot-up-pgadmin:
-
+  odoo_web:
+  odoo_models:
+  odoo_db:
+  pgadmin_data:
 
 networks:
   database:
