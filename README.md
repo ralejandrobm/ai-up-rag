@@ -44,15 +44,51 @@ make dev
 
    ![odoo inicio](docs/odooConfDatos.png)
 
+   ![odoo login](docs/odooLogin.png)
+
+   ![odoo home](docs/odooInicio.png)
+
 3. Activate Developer Mode in Odoo to install the custom add-ons.
 
-4. Install the custom add-ons.
+    ![odoo aps](docs/odooIrSettings.png)
+
+    ![odoo dev](docs/odooDeveloperMode.png)
+
+4. Install the custom add-ons. Make sure to clear the "Apps" filter before searching for "ai_up" in the Apps search bar.
+
+    ![odoo install1](docs/odooIrApps.png)
+    ![odoo install2](docs/odooUpdateAppsList.png)
+    ![odoo install3](docs/odooRemoveFilterApps.png)
+    ![odoo install4](docs/odooSearchAi_Up.png)
+    4.1 install the modules in the following order:  
+    AI UP Vectorizer    
+    AI UP Vectorizer Pg Vector  
+    AI UP Advertisements  
+    AI UP Advertisements Vectorizer  
+    AI up Message History  
+    AI UP Messaging   
+    ![odoo install5](docs/OdooInstallModuls.png)
 
 5. Select the vectorizer provider.
+    ![odoo vec1](docs/odooIrAiVectorizer.png)
+    ![odoo vec2](docs/odooSelectVectorizer.png)
 
 6. Create interested parties.
+    ![odoo IT1](docs/odooIrAdvertisement.png)
+    ![odoo IT2](docs/odooCreateIterestedParties.png)
+
+    ![odoo IT3](docs/odooSaveInterestedParties.png)
 
 7. Create an advertisement. The first time an advertisement is created, the system may take a while because it downloads a model from the internet.
+
+    ![odoo adv1](docs/odooIrAdvertisement.png)
+
+    ![odoo adv2](docs/odooNewAdvertisement.png)
+
+    ![odoo adv3](docs/odooSaveAdvertisement.png)
+
+    ![odoo adv4](docs/odooAdvertisementCreated.png)
+
 
 8. At this point, you can query the RAG system via the API at http://localhost:8069/api/v1/whatsapp/answers using a POST request and sending the `from_phone` and `message` fields.
 
@@ -63,10 +99,20 @@ make dev
 }
 ```
 
+  ![postma](docs/postman.png)
+
 ## 🔍 Querying Data
 
 1. Access the pgAdmin application at http://localhost:5050/. Use the credentials defined in the `.env` file.
 
+    ![pgadmin1](docs/pgadminLogin.png)
+
 2. Register a server using the database connection information from the `.env` file (host, user, and password).
 
+    ![pgadmin2](docs/pgadminAddServer.png)
+    ![pgadmin2](docs/pgadminServerData1.png)
+    ![pgadmin2](docs/pgadminServerData2.png)
+
 3. Query the RAG user interactions using SQL on the `mail_message` table.
+
+    ![pgadmin2](docs/pgadminSQL.png)
