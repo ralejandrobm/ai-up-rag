@@ -1,4 +1,10 @@
-version: '3.1'
+# Server deployment behind nginx-proxy + Let's Encrypt
+# (https://github.com/SHFSAS/documentacion-docker).
+#
+# Before starting, replace the example domains and email:
+#   - odoo.example.com   -> domain for Odoo
+#   - pgadmin.example.com -> domain for pgAdmin
+#   - admin@example.com  -> email for Let's Encrypt notifications
 
 services:
   ai_up_odoo:
@@ -9,24 +15,28 @@ services:
     restart: unless-stopped
     depends_on:
       - ai_up_odoo_db
-    ports:
-      - "8069:8069"
     volumes:
       # ✅ datos persistentes
       - odoo_web:/var/lib/odoo
       - odoo_models:/var/lib/ai-models
 
-      # ✅ config (dev editable)
+      # ✅ config
       - ./config:/etc/odoo
 
-      # ✅ addons (editable)
+      # ✅ addons
       - ../odoo/custom-addons:/mnt/custom-addons
       - ../odoo/third-party-addons:/mnt/third-party-addons
 
+    environment:
+      VIRTUAL_HOST: odoo.example.com
+      VIRTUAL_PORT: 8069
+      LETSENCRYPT_HOST: odoo.example.com
+      LETSENCRYPT_EMAIL: admin@example.com
     env_file:
       - .env
     networks:
       - database
+      - web
     shm_size: '1gb'
     deploy:
       resources:
@@ -69,13 +79,16 @@ services:
       # ✅ volumen sin permisos manuales
       - pgadmin_data:/var/lib/pgadmin
     environment:
+      VIRTUAL_HOST: pgadmin.example.com
+      VIRTUAL_PORT: 80
+      LETSENCRYPT_HOST: pgadmin.example.com
+      LETSENCRYPT_EMAIL: admin@example.com
       PGADMIN_LISTEN_PORT: 80
     env_file:
       - .env
-    ports:
-      - "5050:80"
     networks:
       - database
+      - web
     logging:
       driver: "json-file"
       options:
@@ -91,3 +104,5 @@ volumes:
 networks:
   database:
     driver: bridge
+  web:
+    external: true

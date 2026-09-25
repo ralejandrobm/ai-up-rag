@@ -4,19 +4,25 @@ clean:
 dev:
 	docker compose -p ai-up-odoo -f setup/docker-compose.yml up --build --remove-orphans
 
-# prod commands
+# prod commands (server behind nginx-proxy + Let's Encrypt)
 _prod_up:
-	docker compose -p ai-up-odoo -f setup/docker-compose.yml up -d --build --remove-orphans
+	docker compose -p ai-up-odoo -f setup/docker-compose.server.yml up -d --build --remove-orphans
 
 _prod_down:
-	docker compose -p ai-up-odoo -f setup/docker-compose.yml down --remove-orphans
+	docker compose -p ai-up-odoo -f setup/docker-compose.server.yml down --remove-orphans
 
 prod: _prod_down _prod_up
 
-restart:
+prod-restart:
+	docker compose -p ai-up-odoo -f setup/docker-compose.server.yml restart ai_up_odoo
+
+prod-logs:
+	docker compose -p ai-up-odoo -f setup/docker-compose.server.yml logs -f --tail=10
+
+dev-restart:
 	docker compose -p ai-up-odoo -f setup/docker-compose.yml restart ai_up_odoo 
 
-logs:
+dev-logs:
 	docker compose -p ai-up-odoo -f setup/docker-compose.yml logs -f --tail=10
 
 install-models:
