@@ -1,0 +1,63 @@
+# Reverse proxy with automatic HTTPS for docker-compose.server.yml.
+#
+# Based on https://github.com/SHFSAS/documentacion-docker, using the
+# maintained images (nginxproxy/*) and Docker volumes for the certificates.
+#
+# Run it once per server with `make proxy`. It serves every container on the
+# external `web` network that defines VIRTUAL_HOST / LETSENCRYPT_HOST. If the
+# server already runs an nginx-proxy, don't start this one.
+
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:latest
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - ./proxy/client_max_body_size.conf:/etc/nginx/conf.d/client_max_body_size.conf:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - web
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
+
+  acme-companion:
+    image: nginxproxy/acme-companion:latest
+    container_name: nginx-proxy-acme
+    restart: always
+    depends_on:
+      - nginx-proxy
+    environment:
+      # The certificates use the LETSENCRYPT_EMAIL of each container.
+      NGINX_PROXY_CONTAINER: nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - web
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
+
+volumes:
+  certs:
+  vhost:
+  html:
+  acme:
+
+networks:
+  web:
+    external: true

@@ -1,6 +1,6 @@
 # ☁️ Deploy on an AWS virtual machine (EC2)
 
-This guide deploys AI UP RAG on an Ubuntu EC2 instance with HTTPS. Traffic goes through [nginx-proxy + Let's Encrypt](https://github.com/SHFSAS/documentacion-docker), which routes each domain to its container and issues the SSL certificates automatically.
+This guide deploys AI UP RAG on an Ubuntu EC2 instance with HTTPS. Traffic goes through [nginx-proxy](https://github.com/nginx-proxy/nginx-proxy) and its [Let's Encrypt companion](https://github.com/nginx-proxy/acme-companion), which route each domain to its container and issue the SSL certificates automatically. The proxy is included in this repository (`setup/docker-compose.proxy.yml`), based on [SHFSAS/documentacion-docker](https://github.com/SHFSAS/documentacion-docker), so you don't need to clone anything else.
 
 ```
 Internet ──► :80/:443 nginx-proxy ──► ai_up_odoo (8069)          odoo.example.com
@@ -10,7 +10,14 @@ Internet ──► :80/:443 nginx-proxy ──► ai_up_odoo (8069)          odo
                                    ai_up_odoo_db (pgvector, internal only)
 ```
 
-The server uses `setup/docker-compose.server.yml`. It differs from the local `setup/docker-compose.yml` in that it does not publish ports `8069` and `5050`: everything enters through the proxy on ports 80 and 443.
+The server uses two compose files:
+
+| File | Command | What it runs |
+|------|---------|--------------|
+| `setup/docker-compose.proxy.yml` | `make proxy` | nginx-proxy and the Let's Encrypt companion, on ports 80 and 443 |
+| `setup/docker-compose.server.yml` | `make prod` | Odoo, PostgreSQL (pgvector) and pgAdmin |
+
+Unlike the local `setup/docker-compose.yml`, the server compose does not publish ports `8069` and `5050`: everything enters through the proxy. Both compose files communicate through the external Docker network `web`, which the `make` commands create automatically.
 
 > **Placeholders:** this guide uses `odoo.example.com`, `pgadmin.example.com` and `admin@example.com`. Replace them with your own domains and email.
 
@@ -86,39 +93,7 @@ docker --version
 docker compose version
 ```
 
-Create the external network `web`. The proxy and the public containers communicate through it:
-
-```bash
-docker network create web
-```
-
-## 4. Start nginx-proxy and Let's Encrypt
-
-Clone the proxy repository:
-
-```bash
-cd ~
-git clone https://github.com/SHFSAS/documentacion-docker.git
-cd documentacion-docker/nginx-proxy
-```
-
-Edit `docker-compose.yml` before starting it:
-
-- In the `letsencrypt` service, change `DEFAULT_EMAIL` to your email (`admin@example.com`).
-- Both services mount the certificates from `/home/user/tools/nginx_webproxy/certificats`. You can keep that path (Docker creates it), or change it in **both** services to a path in your home, for example `/home/ubuntu/certs`.
-
-Start the proxy:
-
-```bash
-docker compose up -d
-docker ps
-```
-
-You should see two containers running: the proxy (`jwilder/nginx-proxy`) and the companion (`jrcs/letsencrypt-nginx-proxy-companion`).
-
-The proxy only needs to be started once per server. It serves every project connected to the `web` network.
-
-## 5. Download and configure AI UP RAG
+## 4. Download and configure AI UP RAG
 
 Clone the repository:
 
@@ -161,6 +136,35 @@ Edit `setup/docker-compose.server.yml` and replace the placeholders:
 
 Do not change `VIRTUAL_PORT`. It is the port **inside** the container (`8069` for Odoo and `80` for pgAdmin), not a port of the server.
 
+## 5. Start nginx-proxy and Let's Encrypt
+
+From the root of the repository:
+
+```bash
+make proxy
+```
+
+This creates the `web` network (if it doesn't exist) and starts two containers:
+
+| Container | Image | What it does |
+|-----------|-------|--------------|
+| `nginx-proxy` | `nginxproxy/nginx-proxy` | Listens on ports 80 and 443 and routes each domain to the container with that `VIRTUAL_HOST` |
+| `nginx-proxy-acme` | `nginxproxy/acme-companion` | Issues and renews the Let's Encrypt certificates for the containers with `LETSENCRYPT_HOST` |
+
+The certificates are stored in Docker volumes, so they are kept when the proxy restarts.
+
+The proxy only needs to be started **once per server**, and it runs in its own compose project (`nginx-proxy`), so `make prod` does not stop it. It can serve other projects on the same server too: any container on the `web` network with `VIRTUAL_HOST` and `LETSENCRYPT_HOST`.
+
+> If the server already runs an nginx-proxy (for example, the one from SHFSAS/documentacion-docker), skip this step. Only one proxy can use ports 80 and 443.
+
+Proxy commands:
+
+| Command | Description |
+|---------|-------------|
+| `make proxy` | Start the proxy |
+| `make proxy-logs` | Follow the proxy and certificate logs |
+| `make proxy-down` | Stop the proxy (all the domains on the server stop responding) |
+
 ## 6. Start the application
 
 From the root of the repository:
@@ -177,10 +181,10 @@ Follow the logs until Odoo is ready:
 make prod-logs
 ```
 
-Wait 1 to 2 minutes for Let's Encrypt to issue the certificates. You can follow the process in the companion logs (the container name may vary, check it with `docker ps`):
+Wait 1 to 2 minutes for Let's Encrypt to issue the certificates. You can follow the process in the proxy logs:
 
 ```bash
-docker logs -f --tail 20 <letsencrypt-container-name>
+make proxy-logs
 ```
 
 Then open https://odoo.example.com. If you use Cloudflare, you can re-enable its proxy (orange cloud) once the site loads with HTTPS.
@@ -301,7 +305,8 @@ The data (database, Odoo files, embeddings model and pgAdmin) is stored in Docke
 |---------|--------------------|
 | **502 Bad Gateway** | The container has an error or has not started yet. Wait a moment and check the logs with `make prod-logs`. |
 | **503 Service Unavailable** | nginx-proxy does not recognize the domain. Check `VIRTUAL_HOST` in `setup/docker-compose.server.yml`, check that the container is on the `web` network, and run `make prod` again. |
-| **The certificate is not issued** (the browser shows a certificate warning) | Check that the DNS points to the Elastic IP, that port 80 is open in the security group, and that the Cloudflare proxy is disabled. Then check the companion logs. |
-| **`contact email has forbidden domain "example.com"`** in the companion logs | The placeholders were not replaced. Change `LETSENCRYPT_EMAIL` in `setup/docker-compose.server.yml` (and `DEFAULT_EMAIL` in the proxy) to a real email, then run `make prod` again. |
-| **`network web declared as external, but could not be found`** | Create the network with `docker network create web`. |
+| **The certificate is not issued** (the browser shows a certificate warning) | Check that the DNS points to the Elastic IP, that port 80 is open in the security group, and that the Cloudflare proxy is disabled. Then check the logs with `make proxy-logs`. |
+| **`contact email has forbidden domain "example.com"`** in the companion logs | The placeholders were not replaced. Change `LETSENCRYPT_EMAIL` in `setup/docker-compose.server.yml` to a real email, then run `make prod` again. |
+| **`network web declared as external, but could not be found`** | Run `make proxy` or `make prod`, which create the network. If you used `docker compose` directly, create it with `docker network create web`. |
+| **`port is already allocated` when running `make proxy`** | Another service is using ports 80 or 443, usually another nginx-proxy. Use that proxy and skip `make proxy`, or stop it first. |
 | **The build fails or Odoo restarts when saving an advertisement** | The instance does not have enough memory. Use an instance with more RAM (see step 1). |

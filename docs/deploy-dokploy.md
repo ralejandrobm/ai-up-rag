@@ -5,7 +5,7 @@ This guide deploys AI UP RAG on a server managed by [Dokploy](https://dokploy.co
 | Compose file | Used for | Domains and HTTPS |
 |--------------|----------|-------------------|
 | `setup/docker-compose.yml` | Local development (`make dev`) | None |
-| `setup/docker-compose.server.yml` | Server with nginx-proxy (`make prod`), see [deploy-aws.md](deploy-aws.md) | nginx-proxy + Let's Encrypt |
+| `setup/docker-compose.server.yml` + `setup/docker-compose.proxy.yml` | Server with nginx-proxy (`make proxy` + `make prod`), see [deploy-aws.md](deploy-aws.md) | nginx-proxy + Let's Encrypt |
 | `setup/docker-compose.dokploy.yml` | Dokploy (this guide) | Configured in the Dokploy UI (Traefik) |
 
 Differences between the Dokploy compose and the other two:
@@ -36,7 +36,7 @@ curl -sSL https://dokploy.com/install.sh | sh
 
 Open `http://<SERVER_IP>:3000` and create the administrator account.
 
-Do not run nginx-proxy on the same server. Dokploy's Traefik already uses ports 80 and 443.
+Do not run nginx-proxy (`make proxy`) on the same server. Dokploy's Traefik already uses ports 80 and 443.
 
 ## 2. Configure the DNS
 
