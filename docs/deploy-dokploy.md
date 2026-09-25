@@ -40,6 +40,8 @@ Do not run nginx-proxy (`make proxy`) on the same server. Dokploy's Traefik alre
 
 ## 2. Configure the DNS
 
+The subdomains must point to the IP of the Dokploy server. Dokploy's Traefik receives all the traffic on ports 80 and 443 and routes each subdomain to its service, using the domains you configure in step 6. We suggest managing the DNS with **[Cloudflare](https://www.cloudflare.com/)**, but you can use any other DNS provider (AWS Route 53, GoDaddy, Namecheap, Google Cloud DNS, your domain registrar, etc.). The records are the same in all of them.
+
 Create two `A` records pointing to the server IP:
 
 | Type | Name | Value |
@@ -47,7 +49,13 @@ Create two `A` records pointing to the server IP:
 | A | `odoo.example.com` | `<SERVER_IP>` |
 | A | `pgadmin.example.com` | `<SERVER_IP>` |
 
-If you use Cloudflare, keep the proxy **disabled** (gray cloud) until the certificates are issued.
+If you use Cloudflare, keep the proxy **disabled** (gray cloud, "DNS only") until the certificates are issued. Otherwise Let's Encrypt cannot validate the domain.
+
+Check that the domains resolve to your IP before continuing:
+
+```bash
+nslookup odoo.example.com
+```
 
 ## 3. Create the Compose service
 

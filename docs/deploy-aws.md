@@ -48,6 +48,8 @@ Once the instance is running, go to **EC2** > **Elastic IPs** > **Allocate Elast
 
 ## 2. Configure the DNS
 
+The subdomains must point to the server so that nginx-proxy can route each one to its container. We suggest managing the DNS with **[Cloudflare](https://www.cloudflare.com/)**, but you can use any other DNS provider (AWS Route 53, GoDaddy, Namecheap, Google Cloud DNS, your domain registrar, etc.). The records are the same in all of them.
+
 In your DNS provider, create two `A` records pointing to the Elastic IP:
 
 | Type | Name | Value |
